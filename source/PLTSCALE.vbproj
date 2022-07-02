@@ -2,28 +2,34 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RootNamespace>PLT2PNG</RootNamespace>
+    <RootNamespace>PLTSCALE</RootNamespace>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Authors>MerricksDad</Authors>
-    <Company />
-    <Description>Converts NWN PLT files to PNG images</Description>
+    <Authors>Merricksdad</Authors>
+    <Company>Merricksdad</Company>
     <Copyright>Charles Ewing, 2022</Copyright>
+    <Description>Scales PLT files</Description>
     <PackageLicenseExpression>GNU-GPL v.3.0   "Free &amp; open only if free &amp; open"</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/merricksdad/PLT2PNG</PackageProjectUrl>
-    <PackageIcon>NTPNG.png</PackageIcon>
     <RepositoryUrl>https://github.com/merricksdad/PLT2PNG</RepositoryUrl>
+    <PackageIcon>NTPNG.png</PackageIcon>
     <RepositoryType>github</RepositoryType>
-    <PackageTags>NWN, PLT, PNG, Convert, Image, Neverwinter Nights, Merricksdad</PackageTags>
+    <PackageTags>NWN, PLT, Resize, Image, Neverwinter Nights, Merricksdad</PackageTags>
     <StartupObject>Sub Main</StartupObject>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="..\..\..\..\..\..\NWN\development\NTPNG.png" Link="NTPNG.png">
+      <PackagePath></PackagePath>
+      <Pack>True</Pack>
+    </None>
     <None Include="..\..\..\..\..\..\NWN\development\NTPNG.png">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="My Project\" />
   </ItemGroup>
 
   <ItemGroup>
