@@ -3,17 +3,62 @@ Imports System.Math
 Imports System.Drawing
 
 
-Module Program
+Public Module SharedProgram
+    Public proj As String
 
-    Sub PrintUsage()
-        Console.WriteLine("  Usage:" & vbCrLf & "  PLT2PNG <filename> [-c]" & vbCrLf & "     -c: output colorcoded image")
+    Sub PrintTitle()
+        Select Case proj
+            Case "PLT2PNG"
+                Console.WriteLine("PLT 2 PNG" & vbCrLf & "By MerrickDad" & vbCrLf)
+
+            Case "PLTSCALE"
+                Console.WriteLine("PLT SCALE" & vbCrLf & "By MerrickDad" & vbCrLf)
+
+            Case "PLTTools"
+                Console.WriteLine("PLT Tools" & vbCrLf & "By MerrickDad" & vbCrLf)
+
+        End Select
+
     End Sub
+
+    Public Sub PrintUsage(Optional id As String = "")
+        If id = "" Then id = proj
+        Select Case id
+            Case "PLT2PNG"
+                Console.WriteLine("  Usage:" & vbCrLf & "  PLT2PNG <filename> [-c]" & vbCrLf & "     -c: output colorcoded image" & vbCrLf)
+
+            Case "PLTSCALE"
+                Console.WriteLine("  Usage:" & vbCrLf & "  PLTSCALE <filename> <size_x> <size_y> [-i]" & vbCrLf _
+                    & "     size_x and size_y should be powers of 2 (eg. 32, 64, 128, 256, 512, 1024) " & vbCrLf _
+                    & "     -i: use bilinear interpolation during luminance scaling (paintID will still use no interpolation)" & vbCrLf)
+
+            Case "PLTTools"
+                PrintUsage("PLT2PNG")
+                PrintUsage("PLTSCALE")
+
+        End Select
+
+    End Sub
+
     Sub Main(args As String())
+        proj = "PLTTools"
+        PrintTitle()
+        PrintUsage()
+    End Sub
+
+    Sub Central(args As String())
+        ''which project is using this file
+        If proj = "PLTTools" Then
+            PrintUsage()
+            Return
+        End If
+
         Dim myDir As String = System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) & "\"
 
-        ''args = {"C:\NWN\override\plt2tga\pfh0*.plt", "-c"}
+        ''args = {"C:\NWN\override\plt2tga\cloak_013.plt", "-c"}
+        ''args = {"C:\NWN\override\plt2tga\cloak_013.plt", "512", "512"}
 
-        Console.WriteLine("PLT 2 PNG" & vbCrLf & "By MerrickDad" & vbCrLf)
+        PrintTitle()
 
         ''Dim tmpFile = "C:\NWN\override\plt2tga\pfh0_chest002.plt"
         If args.Count = 0 Then
@@ -21,15 +66,9 @@ Module Program
             Return
         End If
 
+
         Dim sFile As String = args(0)
-        Dim colorCoded As Boolean = False
-        For c = 0 To args.Count - 1
-            If c = 0 Then Continue For
-            If args(c).ToLower() = "-c" Then
-                colorCoded = True
-                Console.WriteLine("...outputting colorcoded images")
-            End If
-        Next
+
 
         ''determine if the filename is local or specific
         Dim filelist() As String = {}
@@ -37,16 +76,16 @@ Module Program
         If IO.File.Exists(sFile) Then
             ''file is specific single file
             ReDim Preserve filelist(filelist.Count)
-            filelist(filelist.Count) = sFile
+            filelist(filelist.Count - 1) = sFile
         Else
             ''check file as local without path
-            If IO.File.Exists(mydir & sFile) Then
+            If IO.File.Exists(myDir & sFile) Then
                 ''file was local single file
                 ReDim Preserve filelist(filelist.Count)
-                filelist(filelist.Count) = sFile
+                filelist(filelist.Count - 1) = sFile
             Else
                 ''check that file is not a directory with mask
-                Dir = System.IO.Path.GetDirectoryName(sFile)
+                dir = System.IO.Path.GetDirectoryName(sFile)
                 If dir <> "" Then
                     ''was at least a directory structure with mask
                     dir &= "\"
@@ -76,23 +115,108 @@ Module Program
             Return
         End If
 
-        Dim pltFile As New clsPLT
-        For Each sFile In filelist
-            If pltFile.Open(sFile) Then
-                If pltFile.ConvertToPNG(colorCoded) Then
-                    Console.WriteLine("...converted " & sFile)
-                Else
-                    Console.WriteLine("...failed to convert " & sFile)
+        ''translate arguments
+        Dim colorCoded As Boolean = False
+        Dim scaleMode As Boolean = 0
+
+        Dim nScaleWidth As Integer
+        Dim nScaleHeight As Integer
+
+        Select Case proj
+            Case "PLT2PNG"
+
+                For c = 0 To args.Count - 1
+                    If c < 1 Then Continue For
+                    Select Case args(c).ToLower()
+                        Case "-c"
+                            colorCoded = True
+                            Console.WriteLine("...outputting colorcoded images")
+                    End Select
+                Next
+
+            Case "PLTSCALE"
+                If args.Count < 2 Then
+                    PrintUsage()
+                    Return
                 End If
-            Else
-                Console.WriteLine("...failed to open " & sFile)
-            End If
+                nScaleWidth = args(1)
+                nScaleHeight = args(2)
+
+                ''confirm binary numbers
+                Dim binNums() As Integer = {2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096} '', 8192, 16384, 32768}
+                Dim badSize As Boolean
+                If Array.Find(binNums, Function(v) v = nScaleWidth) = -1 Then
+                    badSize = True
+                End If
+                If Array.Find(binNums, Function(v) v = nScaleHeight) = -1 Then
+                    badSize = True
+                End If
+                If badSize Then
+                    Console.WriteLine("...Error: unsupported plt image size")
+                    Return
+                End If
+
+                For c = 0 To args.Count - 1
+                    If c < 1 Then Continue For
+                    Select Case args(c).ToLower()
+                        Case "-i"
+                            scaleMode = 1
+                            Console.WriteLine("...using bilinear interpolation on grayscale data ")
+                    End Select
+                Next
+
+        End Select
+
+        For Each sFile In filelist
+            Select Case proj
+                Case "PLT2PNG"
+                    ConvertToPNG(sFile, colorCoded:=colorCoded)
+
+                Case "PLTSCALE"
+                    Rescale(sFile, nScaleWidth, nScaleHeight, scaleMode:=scaleMode)
+
+                Case Else
+                    Return
+
+            End Select
+
         Next
 
         Console.WriteLine("Done")
 
     End Sub
 
+    Public Sub ConvertToPNG(sfile As String, Optional colorCoded As Boolean = False)
+        Dim pltFile As New clsPLT
+        If pltFile.Open(sfile) Then
+            If pltFile.ConvertToPNG(colorCoded:=colorCoded) Then
+                Console.WriteLine("...converted " & sfile)
+            Else
+                Console.WriteLine("...failed to convert " & sfile)
+            End If
+        Else
+            Console.WriteLine("...failed to open " & sfile)
+        End If
+        pltFile = Nothing
+    End Sub
+
+    Public Sub Rescale(sfile As String, width As Integer, height As Integer, Optional scaleMode As Integer = 0)
+        Dim pltFile As New clsPLT
+        If pltFile.Open(sfile) Then
+
+            If pltFile.Rescale(width, height, scaleMode:=scaleMode) Then
+                Console.WriteLine("...rescaled " & sfile)
+                If pltFile.Save() Then
+                    Console.WriteLine("...file saved")
+                End If
+            Else
+                Console.WriteLine("...failed to rescale " & sfile)
+            End If
+        Else
+            Console.WriteLine("...failed to open " & sfile)
+        End If
+        pltFile = Nothing
+    End Sub
     Public Function HSL2RGB(ByVal H As Double, ByVal S As Double, ByVal L As Double) As Color
         Dim p1 As Double
         Dim p2 As Double
@@ -135,4 +259,6 @@ Module Program
             Qqh2RGB = q1
         End If
     End Function
+
+
 End Module

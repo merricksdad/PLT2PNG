@@ -6,12 +6,12 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v3.1": {
-      "PLT2PNG/1.0.1": {
+      "PLTSCALE/1.0.0": {
         "dependencies": {
           "PLTTools": "1.0.0"
         },
         "runtime": {
-          "PLT2PNG.dll": {}
+          "PLTSCALE.dll": {}
         }
       },
       "Microsoft.Win32.SystemEvents/6.0.0": {
@@ -66,7 +66,7 @@
     }
   },
   "libraries": {
-    "PLT2PNG/1.0.1": {
+    "PLTSCALE/1.0.0": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
